@@ -76,7 +76,8 @@ class SubscriptionService:
                         line.amount
                     ))
                 
-                return SubscriptionService.get_subscription_by_id(subscription_id)
+            # Fetch outside the transaction block to avoid deadlock
+            return SubscriptionService.get_subscription_by_id(subscription_id)
         except Exception as e:
             logger.error(f"Error creating subscription: {str(e)}")
             raise e
@@ -126,7 +127,7 @@ class SubscriptionService:
                         id=row[0],
                         subscription_number=row[1],
                         customer_id=str(row[2]),
-                        customer_name=row[16] or "Unknown",
+                        customer_name=row[18] or "Unknown",
                         quotation_template=row[3],
                         expiration_date=row[4],
                         recurring_plan=row[5],
@@ -175,7 +176,7 @@ class SubscriptionService:
                     id=row[0],
                     subscription_number=row[1],
                     customer_id=str(row[2]),
-                    customer_name=row[16] or "Unknown",
+                    customer_name=row[18] or "Unknown",
                     quotation_template=row[3],
                     expiration_date=row[4],
                     recurring_plan=row[5],
@@ -266,15 +267,17 @@ class SubscriptionService:
                         ))
 
                 if not update_fields:
-                    return SubscriptionService.get_subscription_by_id(subscription_id)
+                    # Nothing to update, commit and return current state
+                    pass
+                else:
+                    update_fields.append("ModifiedAt = GETDATE()")
+                    params.append(subscription_id)
 
-                update_fields.append("ModifiedAt = GETDATE()")
-                params.append(subscription_id)
+                    sql = f"UPDATE Subscriptions SET {', '.join(update_fields)} WHERE Id = ?"
+                    cursor.execute(sql, tuple(params))
 
-                sql = f"UPDATE Subscriptions SET {', '.join(update_fields)} WHERE Id = ?"
-                cursor.execute(sql, tuple(params))
-
-                return SubscriptionService.get_subscription_by_id(subscription_id)
+            # Fetch outside the transaction block
+            return SubscriptionService.get_subscription_by_id(subscription_id)
         except Exception as e:
             logger.error(f"Error updating subscription: {str(e)}")
             raise e
