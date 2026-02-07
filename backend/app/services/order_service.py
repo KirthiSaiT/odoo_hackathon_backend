@@ -62,7 +62,7 @@ class OrderService:
             raise e
 
     @staticmethod
-    def create_order_from_cart(user_id: str):
+    def create_order_from_cart(user_id: str, payment_intent_id: Optional[str] = None):
         """
         Convert cart items to an order (Simplified checkout)
         """
@@ -96,6 +96,14 @@ class OrderService:
                         INSERT INTO OrderItems (OrderId, ProductId, Quantity, Price, VariantId, PlanName)
                         VALUES (?, ?, ?, ?, ?, ?)
                     """, (order_id, item[0], item[1], item[2], item[3], item[4]))
+
+                # Link Payment if provided
+                if payment_intent_id:
+                    cursor.execute("""
+                        UPDATE Payments
+                        SET OrderId = ?
+                        WHERE StripePaymentIntentId = ?
+                    """, (order_id, payment_intent_id))
 
                 # Clear Cart
                 cursor.execute("DELETE FROM Cart WHERE UserId = ?", (user_id,))

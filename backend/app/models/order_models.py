@@ -37,3 +37,6 @@ class OrderListItem(BaseModel):
 
 class OrdersListResponse(BaseModel):
     orders: List[OrderListItem]
+
+class CheckoutRequest(BaseModel):
+    payment_intent_id: Optional[str] = None
