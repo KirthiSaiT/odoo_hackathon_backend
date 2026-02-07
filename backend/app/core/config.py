@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS: int = 24
     PASSWORD_RESET_TOKEN_EXPIRE_HOURS: int = 1
+
+    # Stripe
+    STRIPE_SECRET_KEY: str
     
     # SMTP
     SMTP_HOST: str = "smtp.gmail.com"

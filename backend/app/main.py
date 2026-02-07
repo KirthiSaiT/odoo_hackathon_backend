@@ -16,7 +16,9 @@ from app.routes.role_routes import router as role_router
 from app.routes.profile_routes import router as profile_router
 from app.routes.product_routes import router as product_router
 from app.routes.cart_routes import router as cart_router
+from app.routes.cart_routes import router as cart_router
 from app.routes.subscription_routes import router as subscription_router
+from app.routes.payment_routes import router as payment_router
 from app.core.config import get_settings
 
 # Configure logging
@@ -133,6 +135,7 @@ app.include_router(profile_router)
 app.include_router(product_router, prefix="/api/products", tags=["Products"])
 app.include_router(cart_router, prefix="/api/cart", tags=["Cart"])
 app.include_router(subscription_router, prefix="/api/subscriptions", tags=["Subscriptions"])
+app.include_router(payment_router, prefix="/api", tags=["Payments"])
 app.include_router(order_router, prefix="/api", tags=["Orders"])
 
 

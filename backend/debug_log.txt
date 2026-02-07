@@ -50,3 +50,6 @@ Fetching all products: page=1, size=50
 Fetching all products: page=1, size=50
 >>>>>>> 39849193e28f58de46ea47f9c459f1d8bfce593a
 Fetching all products: page=1, size=100
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
