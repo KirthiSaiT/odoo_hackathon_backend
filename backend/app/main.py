@@ -121,6 +121,9 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 # =====================
 # Routes
 # =====================
+from app.routes.order_routes import router as order_router
+
+# ... inside routes section ...
 app.include_router(auth_router)
 app.include_router(employee_router)
 app.include_router(user_router)
@@ -128,6 +131,8 @@ app.include_router(role_router)
 app.include_router(profile_router)
 app.include_router(product_router, prefix="/api/products", tags=["Products"])
 app.include_router(cart_router, prefix="/api/cart", tags=["Cart"])
+app.include_router(order_router, prefix="/api", tags=["Orders"])
+
 
 
 # =====================
