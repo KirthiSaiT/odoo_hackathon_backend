@@ -13,6 +13,7 @@ from app.routes.auth_routes import router as auth_router
 from app.routes.employee_routes import router as employee_router
 from app.routes.user_routes import router as user_router
 from app.routes.role_routes import router as role_router
+from app.routes.profile_routes import router as profile_router
 from app.routes.product_routes import router as product_router
 from app.routes.cart_routes import router as cart_router
 from app.core.config import get_settings
@@ -124,6 +125,7 @@ app.include_router(auth_router)
 app.include_router(employee_router)
 app.include_router(user_router)
 app.include_router(role_router)
+app.include_router(profile_router)
 app.include_router(product_router, prefix="/api/products", tags=["Products"])
 app.include_router(cart_router, prefix="/api/cart", tags=["Cart"])
 

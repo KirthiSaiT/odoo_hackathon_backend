@@ -66,11 +66,41 @@ async def get_stats(
     summary="Get user access rights"
 )
 async def get_user_rights(
-    user_id: int,
+    user_id: str,
     current_user: Annotated[dict, Depends(require_role("ADMIN"))]
 ):
     try:
         return RoleService.get_user_rights(user_id)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+
+@router.get(
+    "/rights/me",
+    response_model=UserRightsResponse,
+    summary="Get current user's access rights",
+    description="Fetch access rights for the currently logged-in user based on their token"
+)
+async def get_my_rights(
+    current_user: Annotated[dict, Depends(require_role("ADMIN", "EMPLOYEE", "USER"))]
+):
+    """
+    Returns the access rights for the currently authenticated user.
+    Used by frontend to determine which actions to show/hide.
+    """
+    try:
+        user_id = current_user.get("id") or current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User ID not found in token"
+            )
+        return RoleService.get_user_rights(str(user_id))
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -83,7 +113,7 @@ async def get_user_rights(
     summary="Save user access rights"
 )
 async def save_user_rights(
-    user_id: int,
+    user_id: str,
     rights: List[UserRight],
     current_user: Annotated[dict, Depends(require_role("ADMIN"))]
 ):

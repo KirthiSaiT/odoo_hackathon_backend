@@ -77,7 +77,7 @@ class RoleService:
             return StatsResponse(total_users=0, active_employees=0, total_roles=0, total_modules=0)
 
     @staticmethod
-    def get_user_rights(user_id: int) -> UserRightsResponse:
+    def get_user_rights(user_id: str) -> UserRightsResponse:
         """Fetch access rights for a user"""
         try:
             with get_db_cursor() as cursor:
@@ -106,7 +106,7 @@ class RoleService:
             return UserRightsResponse(user_id=str(user_id), rights=[])
 
     @staticmethod
-    def save_user_rights(user_id: int, rights: List[UserRight]):
+    def save_user_rights(user_id: str, rights: List[UserRight]):
         """Save access rights for a user (Delete & Insert)"""
         try:
             with get_db_cursor() as cursor:
