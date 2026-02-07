@@ -1,0 +1,18 @@
+Creating Product: testing 1
+  - Main Image: https://www.google.com/imgres?q=cloud%20suite%20images&imgurl=https%3A%2F%2Fimages.computerwoche.de%2Fbdb%2F3390403%2Foriginal.jpg%3Fquality%3D50%26strip%3Dall&imgrefurl=https%3A%2F%2Fwww.cio.com%2Farticle%2F3823972%2Fsap-builds-new-business-suite-in-the-cloud.html&docid=GZQN0ximabpkWM&tbnid=1aTItKBVRJ742M&vet=12ahUKEwiaqdOfgMiSAxUqn68BHfsCJrcQnPAOegQIcRAB..i&w=2500&h=1406&hcb=2&ved=2ahUKEwiaqdOfgMiSAxUqn68BHfsCJrcQnPAOegQIcRAB
+  - Sub Images: ['https://www.google.com/imgres?q=cloud%20suite%20images&imgurl=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2F4%2F4c%2FAdobe_Creative_Cloud_rainbow_icon.svg&imgrefurl=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FAdobe_Creative_Cloud&docid=ynRwJNIT5e6MrM&tbnid=vH97CmCjGeu_PM&vet=12ahUKEwiaqdOfgMiSAxUqn68BHfsCJrcQnPAOegQIXRAB..i&w=240&h=234&hcb=2&ved=2ahUKEwiaqdOfgMiSAxUqn68BHfsCJrcQnPAOegQIXRAB', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSnPydwsIFN9_FOys3VZDl0iW2k6oDMqVZ09w&s', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSBzpy5pyl8NALUl1bObbK7PIgYJQ1Q9zNltQ&s']
+  - Created Product ID: 4
+Fetching all products: page=1, size=1
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
+Creating Product: erp 
+  - Main Image: https://t3.ftcdn.net/jpg/06/35/00/52/240_F_635005231_dRD5rpvX8qYLsJPcmTxJSpXojYqmxwPU.jpg
+  - Sub Images: ['https://t4.ftcdn.net/jpg/03/08/21/39/240_F_308213916_X0bmicVBe1BjZBS7H86lbdwstNYKpVyD.jpg', 'https://t3.ftcdn.net/jpg/01/95/31/40/240_F_195314072_clvSOoLmrE01RqaotxbGLF1qwMi0fge8.jpg', 'https://t3.ftcdn.net/jpg/05/65/63/24/240_F_565632455_8elNnLL7Jxfm9hAcAn8VMmlpJfX5DK29.jpg']
+  - Created Product ID: 5
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
