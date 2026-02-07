@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from contextlib import asynccontextmanager
 import logging
 import os
 
@@ -15,7 +16,6 @@ from app.routes.user_routes import router as user_router
 from app.routes.role_routes import router as role_router
 from app.routes.profile_routes import router as profile_router
 from app.routes.product_routes import router as product_router
-from app.routes.cart_routes import router as cart_router
 from app.routes.cart_routes import router as cart_router
 from app.routes.subscription_routes import router as subscription_router
 from app.routes.payment_routes import router as payment_router
@@ -28,13 +28,32 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Application starting up...")
+    
+    # Debug Stripe Key
+    try:
+        settings = get_settings()
+        logger.info(f"STARTUP DEBUG: Stripe Key Status: {'Present' if settings.STRIPE_SECRET_KEY else 'Missing'}")
+        if settings.STRIPE_SECRET_KEY:
+            logger.info(f"STARTUP DEBUG: Key starts with: {settings.STRIPE_SECRET_KEY[:4]}...")
+    except Exception as e:
+        logger.error(f"STARTUP DEBUG: Error checking Stripe key: {e}")
+        
+    yield
+    # Shutdown
+    logger.info("Application shutting down...")
+
 # Initialize FastAPI app
 app = FastAPI(
     title="SaaS Authentication API",
     description="Multi-tenant authentication module with JWT",
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 

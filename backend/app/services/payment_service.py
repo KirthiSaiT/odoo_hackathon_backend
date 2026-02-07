@@ -16,16 +16,21 @@ class PaymentService:
     @staticmethod
     def create_payment_intent(data: PaymentCreate, user_id: str) -> PaymentResponse:
         try:
-            # 1. Create Stripe Payment Intent
-            if not stripe.api_key:
-                stripe.api_key = settings.STRIPE_SECRET_KEY
+            # Refresh settings to ensure we get the latest
+            current_settings = get_settings()
             
-            if not stripe.api_key:
-                logger.error("Stripe API Key is missing!")
+            # Explicitly set the key before use
+            stripe.api_key = current_settings.STRIPE_SECRET_KEY
+            
+            # Debug logging
+            if stripe.api_key:
+                masked_key = f"{stripe.api_key[:4]}...{stripe.api_key[-4:]}"
+                logger.info(f"Using Stripe Key: {masked_key}")
+            else:
+                logger.error("Stripe API Key is MISSING in settings at runtime!")
                 raise ValueError("Stripe API Key is not configured.")
 
-            logger.info(f"Using Stripe Key: {stripe.api_key[:4]}...{stripe.api_key[-4:] if stripe.api_key else ''}")
-
+            # 1. Create Stripe Payment Intent
             intent = stripe.PaymentIntent.create(
                 amount=int(data.amount * 100),  # Convert to cents
                 currency=data.currency.lower(),
@@ -39,19 +44,23 @@ class PaymentService:
 
             # 2. Record in Database
             with get_db_cursor() as cursor:
+                # Use default value for OrderId if None (assuming DB allows NULL or has default)
+                # But looking at schema, OrderId is nullable.
+                order_id_val = str(data.order_id) if data.order_id else None
+                
                 cursor.execute("""
                     INSERT INTO Payments (
-                        UserId, OrderId, StripePaymentIntentId, Amount, Currency, Status
+                        UserId, OrderId, StripePaymentIntentId, Amount, Currency, Status, CreatedAt, ModifiedAt
                     )
                     OUTPUT INSERTED.Id
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, GETDATE(), GETDATE())
                 """, (
                     user_id,
-                    data.order_id,
+                    order_id_val,
                     intent.id,
                     data.amount,
                     data.currency,
-                    "Pending"  # Initial status for intent
+                    "Pending"
                 ))
             
             return PaymentResponse(
@@ -62,6 +71,9 @@ class PaymentService:
                 status="Pending"
             )
 
+        except stripe.error.AuthenticationError as e:
+            logger.error(f"Stripe Authentication Error: {str(e)}")
+            raise HTTPException(status_code=500, detail="Payment gateway authentication failed")
         except Exception as e:
             logger.error(f"Error creating payment intent: {str(e)}")
             raise e
