@@ -5,3 +5,13 @@ Creating Product: testing 1
 Fetching all products: page=1, size=1
 Fetching all products: page=1, size=50
 Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
+Creating Product: erp 
+  - Main Image: https://t3.ftcdn.net/jpg/06/35/00/52/240_F_635005231_dRD5rpvX8qYLsJPcmTxJSpXojYqmxwPU.jpg
+  - Sub Images: ['https://t4.ftcdn.net/jpg/03/08/21/39/240_F_308213916_X0bmicVBe1BjZBS7H86lbdwstNYKpVyD.jpg', 'https://t3.ftcdn.net/jpg/01/95/31/40/240_F_195314072_clvSOoLmrE01RqaotxbGLF1qwMi0fge8.jpg', 'https://t3.ftcdn.net/jpg/05/65/63/24/240_F_565632455_8elNnLL7Jxfm9hAcAn8VMmlpJfX5DK29.jpg']
+  - Created Product ID: 5
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
