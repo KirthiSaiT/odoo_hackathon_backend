@@ -36,7 +36,7 @@ class AdminService:
         if role_id == 1:
             return "ADMIN"
         elif role_id == 2:
-            return "EMPLOYEE"
+            return "INTERNAL"
         else:
             return "PORTAL"
 
@@ -67,6 +67,61 @@ class AdminService:
         except Exception as e:
             logger.error(f"❌ Error fetching lookups: {str(e)}")
             raise e
+
+    @staticmethod
+    def _get_employee_by_id_internal(cursor, emp_id: int) -> Optional[EmployeeResponse]:
+        """Helper to fetch employee within existing cursor"""
+        sql = """
+        SELECT 
+            e.Id, e.FirstName, e.LastName, e.Email, e.PhoneNumber,
+            e.DateOfBirth, e.GenderId, e.MaritalStatusId, e.BloodGroupId,
+            e.DateOfJoining, e.DesignationId, e.DepartmentId, e.EmploymentType,
+            e.EmploymentStatus, e.AddressLine1, e.AddressLine2, e.City, e.State,
+            e.PostalCode, e.CountryId, e.AdditionalNotes, e.RoleId, e.IsActive,
+            e.CreatedAt, e.UserId,
+            
+            g.Name as GenderName,
+            ms.Name as MaritalStatusName,
+            bg.Name as BloodGroupName,
+            dep.Name as DepartmentName,
+            des.Name as DesignationName,
+            et.Name as EmploymentTypeName,
+            es.Name as EmploymentStatusName,
+            c.Name as CountryName,
+            r.role_name as RoleName
+            
+        FROM Employees e
+        LEFT JOIN Genders g ON e.GenderId = g.Id
+        LEFT JOIN MaritalStatuses ms ON e.MaritalStatusId = ms.Id
+        LEFT JOIN BloodGroups bg ON e.BloodGroupId = bg.Id
+        LEFT JOIN Departments dep ON e.DepartmentId = dep.Id
+        LEFT JOIN Designations des ON e.DesignationId = des.Id
+        LEFT JOIN EmploymentTypes et ON e.EmploymentType = et.Id
+        LEFT JOIN EmploymentStatuses es ON e.EmploymentStatus = es.Id
+        LEFT JOIN Countries c ON e.CountryId = c.Id
+        LEFT JOIN Roles r ON e.RoleId = r.role_id
+        WHERE e.Id = ?
+        """
+        cursor.execute(sql, (emp_id,))
+        row = cursor.peek() # Use generic mapping or manual
+        
+        if not row:
+            return None
+
+        # Manual mapping from tuple to Pydantic
+        # Adjust indices based on SELECT order
+        return EmployeeResponse(
+            id=row[0], first_name=row[1], last_name=row[2], email=row[3], phone_number=row[4],
+            date_of_birth=row[5], gender_id=row[6], marital_status_id=row[7], blood_group_id=row[8],
+            date_of_joining=row[9], designation_id=row[10], department_id=row[11], employment_type=row[12],
+            employment_status=row[13], address_line1=row[14], address_line2=row[15], city=row[16], state=row[17],
+            postal_code=row[18], country_id=row[19], additional_notes=row[20], role_id=row[21], is_active=bool(row[22]),
+            created_at=row[23], user_id=str(row[24]) if row[24] else None,
+            
+            gender_name=row[25], marital_status_name=row[26], blood_group_name=row[27],
+            department_name=row[28], designation_name=row[29], employment_type_name=row[30],
+            employment_status_name=row[31], country_name=row[32], role_name=row[33]
+        )
 
     @staticmethod
     def create_employee(data: EmployeeCreate, created_by_id: Optional[int] = None) -> EmployeeResponse:
@@ -142,7 +197,7 @@ class AdminService:
                 logger.info(f"✅ Created Employee {emp_id} linked to User {user_id}")
                 
                 # Retrieve full employee details for response
-                return AdminService.get_employee_by_id(emp_id)
+                return AdminService._get_employee_by_id_internal(cursor, emp_id)
 
         except Exception as e:
             logger.error(f"❌ Error creating employee: {str(e)}")
@@ -153,57 +208,7 @@ class AdminService:
         """Fetch single employee with joined data"""
         try:
             with get_db_cursor() as cursor:
-                sql = """
-                SELECT 
-                    e.Id, e.FirstName, e.LastName, e.Email, e.PhoneNumber,
-                    e.DateOfBirth, e.GenderId, e.MaritalStatusId, e.BloodGroupId,
-                    e.DateOfJoining, e.DesignationId, e.DepartmentId, e.EmploymentType,
-                    e.EmploymentStatus, e.AddressLine1, e.AddressLine2, e.City, e.State,
-                    e.PostalCode, e.CountryId, e.AdditionalNotes, e.RoleId, e.IsActive,
-                    e.CreatedAt, e.UserId,
-                    
-                    g.Name as GenderName,
-                    ms.Name as MaritalStatusName,
-                    bg.Name as BloodGroupName,
-                    dep.Name as DepartmentName,
-                    des.Name as DesignationName,
-                    et.Name as EmploymentTypeName,
-                    es.Name as EmploymentStatusName,
-                    c.Name as CountryName,
-                    r.role_name as RoleName
-                    
-                FROM Employees e
-                LEFT JOIN Genders g ON e.GenderId = g.Id
-                LEFT JOIN MaritalStatuses ms ON e.MaritalStatusId = ms.Id
-                LEFT JOIN BloodGroups bg ON e.BloodGroupId = bg.Id
-                LEFT JOIN Departments dep ON e.DepartmentId = dep.Id
-                LEFT JOIN Designations des ON e.DesignationId = des.Id
-                LEFT JOIN EmploymentTypes et ON e.EmploymentType = et.Id
-                LEFT JOIN EmploymentStatuses es ON e.EmploymentStatus = es.Id
-                LEFT JOIN Countries c ON e.CountryId = c.Id
-                LEFT JOIN Roles r ON e.RoleId = r.role_id
-                WHERE e.Id = ?
-                """
-                cursor.execute(sql, (emp_id,))
-                row = cursor.peek() # Use generic mapping or manual
-                
-                if not row:
-                    return None
-
-                # Manual mapping from tuple to Pydantic
-                # Adjust indices based on SELECT order
-                return EmployeeResponse(
-                    id=row[0], first_name=row[1], last_name=row[2], email=row[3], phone_number=row[4],
-                    date_of_birth=row[5], gender_id=row[6], marital_status_id=row[7], blood_group_id=row[8],
-                    date_of_joining=row[9], designation_id=row[10], department_id=row[11], employment_type=row[12],
-                    employment_status=row[13], address_line1=row[14], address_line2=row[15], city=row[16], state=row[17],
-                    postal_code=row[18], country_id=row[19], additional_notes=row[20], role_id=row[21], is_active=bool(row[22]),
-                    created_at=row[23], user_id=str(row[24]) if row[24] else None,
-                    
-                    gender_name=row[25], marital_status_name=row[26], blood_group_name=row[27],
-                    department_name=row[28], designation_name=row[29], employment_type_name=row[30],
-                    employment_status_name=row[31], country_name=row[32], role_name=row[33]
-                )
+                return AdminService._get_employee_by_id_internal(cursor, emp_id)
         except Exception as e:
             logger.error(f"❌ Error getting employee {emp_id}: {str(e)}")
             return None
@@ -243,7 +248,7 @@ class AdminService:
                             new_role_id = val
                 
                 if not fields:
-                    return AdminService.get_employee_by_id(emp_id)
+                    return AdminService._get_employee_by_id_internal(cursor, emp_id)
 
                 fields.append("ModifiedAt = SYSDATETIME()")
                 fields.append("ModifiedById = ?")
@@ -264,7 +269,7 @@ class AdminService:
                         cursor.execute("UPDATE Users SET role_id = ?, role = ? WHERE user_id = ?", 
                                      (new_role_id, role_str, user_id))
 
-                return AdminService.get_employee_by_id(emp_id)
+                return AdminService._get_employee_by_id_internal(cursor, emp_id)
         except Exception as e:
             logger.error(f"❌ Error updating employee {emp_id}: {str(e)}")
             raise e

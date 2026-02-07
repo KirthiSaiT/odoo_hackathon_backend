@@ -43,7 +43,7 @@ class RoleListResponse(BaseModel):
 class UserRight(BaseModel):
     """User access right for a module"""
     id: Optional[int] = None
-    user_id: int
+    user_id: str
     module_key: str
     can_view: bool = False
     can_create: bool = False
