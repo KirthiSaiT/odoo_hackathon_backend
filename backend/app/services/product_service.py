@@ -41,7 +41,8 @@ class ProductService:
                         @SalesPrice = ?,
                         @CostPrice = ?,
                         @Tax = ?,
-                        @UserId = ?;
+                        @UserId = ?,
+                        @Category = ?;
                     
                     SELECT @ProductId;
                     """,
@@ -51,7 +52,8 @@ class ProductService:
                         data.sales_price, 
                         data.cost_price, 
                         data.tax, 
-                        user_id
+                        user_id,
+                        data.category
                     )
                 )
                 row = cursor.fetchone()
@@ -118,7 +120,7 @@ class ProductService:
                      """
                     SELECT 
                         Id, Name, ProductType, SalesPrice, CostPrice, Tax, 
-                        CreatedByEmployeeId, CreatedAt, ModifiedAt, IsActive, MainImage
+                        CreatedByEmployeeId, CreatedAt, ModifiedAt, IsActive, MainImage, Category
                     FROM Products
                     WHERE Id = ?;
                     """,
@@ -147,6 +149,7 @@ class ProductService:
                     modified_at=row[8],
                     is_active=bool(row[9]),
                     main_image=row[10],
+                    category=row[11],
                     sub_images=sub_images
                 )
         except Exception as e:
@@ -174,7 +177,7 @@ class ProductService:
                 sql = """
                 SELECT 
                     Id, Name, ProductType, SalesPrice, CostPrice, Tax, 
-                    CreatedByEmployeeId, CreatedAt, ModifiedAt, IsActive, MainImage
+                    CreatedByEmployeeId, CreatedAt, ModifiedAt, IsActive, MainImage, Category
                 FROM Products
                 WHERE IsActive = 1
                 """
@@ -206,7 +209,8 @@ class ProductService:
                         created_at=row[7],
                         modified_at=row[8],
                         is_active=bool(row[9]),
-                        main_image=row[10]
+                        main_image=row[10],
+                        category=row[11]
                     ))
 
                 return ProductListResponse(items=items, total=total, page=page, size=size)
@@ -225,7 +229,7 @@ class ProductService:
                     """
                     SELECT 
                         Id, Name, ProductType, SalesPrice, CostPrice, Tax, 
-                        CreatedByEmployeeId, CreatedAt, ModifiedAt, IsActive, MainImage
+                        CreatedByEmployeeId, CreatedAt, ModifiedAt, IsActive, MainImage, Category
                     FROM Products
                     WHERE Id = ? AND IsActive = 1
                     """,
@@ -257,6 +261,7 @@ class ProductService:
                     modified_at=row[8],
                     is_active=bool(row[9]),
                     main_image=row[10],
+                    category=row[11],
                     sub_images=sub_images
                 )
         except Exception as e:
@@ -284,4 +289,18 @@ class ProductService:
                 return templates
         except Exception as e:
             logger.error(f"❌ Error fetching recurring plan templates: {str(e)}")
+            raise e
+
+    @staticmethod
+    def get_categories() -> List[str]:
+        """Fetch all distinct product categories"""
+        try:
+            with get_db_cursor() as cursor:
+                cursor.execute(
+                    "SELECT DISTINCT Category FROM Products WHERE IsActive = 1 AND Category IS NOT NULL"
+                )
+                rows = cursor.fetchall()
+                return [row[0] for row in rows]
+        except Exception as e:
+            logger.error(f"❌ Error fetching categories: {str(e)}")
             raise e
