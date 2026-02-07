@@ -30,8 +30,6 @@ def _create_connection():
         f"UID={settings.DB_USER};"
         f"PWD={settings.DB_PASSWORD};"
         f"MARS_Connection=yes;"
-        f"Encrypt=yes;"
-        f"TrustServerCertificate=yes;"
         f"Connection Timeout=30;"
     )
     return pyodbc.connect(conn_str, autocommit=False, timeout=30)
