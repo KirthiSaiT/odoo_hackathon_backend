@@ -29,8 +29,7 @@ async def create_product(
 async def get_products(
     page: int = Query(1, ge=1),
     size: int = Query(10, ge=1, le=100),
-    search: Optional[str] = None,
-    current_user: dict = Depends(get_current_user)
+    search: Optional[str] = None
 ):
     """
     Get paginated list of products
@@ -49,5 +48,20 @@ async def get_recurring_templates(
     """
     try:
         return ProductService.get_recurring_plan_templates()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/{product_id}", response_model=ProductResponse)
+async def get_product_by_id(
+    product_id: int
+):
+    """
+    Get a single product by ID
+    """
+    try:
+        product = ProductService.get_product_by_id(product_id)
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found")
+        return product
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

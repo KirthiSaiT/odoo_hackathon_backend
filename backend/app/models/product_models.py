@@ -41,6 +41,8 @@ class ProductCreate(ProductBase):
     """Schema for creating a product"""
     recurring_plans: Optional[List[RecurringPlanCreate]] = []
     variants: Optional[List[ProductVariantCreate]] = []
+    main_image: Optional[str] = None
+    sub_images: Optional[List[str]] = []
 
 class RecurringPlanTemplate(BaseModel):
     """Schema for recurring plan templates"""
@@ -56,6 +58,8 @@ class ProductResponse(ProductBase):
     created_by_employee_id: Optional[int] = None
     created_at: Optional[datetime] = None
     modified_at: Optional[datetime] = None
+    main_image: Optional[str] = None
+    sub_images: Optional[List[str]] = []
 
 class ProductListResponse(BaseModel):
     """List response for products"""
