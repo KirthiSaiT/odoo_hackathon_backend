@@ -66,7 +66,7 @@ async def get_stats(
     summary="Get user access rights"
 )
 async def get_user_rights(
-    user_id: int,
+    user_id: str,
     current_user: Annotated[dict, Depends(require_role("ADMIN"))]
 ):
     try:
@@ -83,7 +83,7 @@ async def get_user_rights(
     summary="Save user access rights"
 )
 async def save_user_rights(
-    user_id: int,
+    user_id: str,
     rights: List[UserRight],
     current_user: Annotated[dict, Depends(require_role("ADMIN"))]
 ):

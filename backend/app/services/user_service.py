@@ -32,7 +32,7 @@ class UserService:
         if role_id == 1:
             return "ADMIN"
         elif role_id == 2:
-            return "EMPLOYEE"
+            return "INTERNAL"
         else:
             return "PORTAL"
 

@@ -1,5 +1,5 @@
 """
-Employee/HR Service
+Employee Service
 Business logic for employee management
 """
 from typing import Optional, List
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class EmployeeService:
-    """Service for Employee/HR Management"""
+    """Service for Employee Management"""
 
     @staticmethod
     def _generate_password(prefix: str = "odoo@", length: int = 3) -> str:
@@ -33,9 +33,62 @@ class EmployeeService:
         if role_id == 1:
             return "ADMIN"
         elif role_id == 2:
-            return "EMPLOYEE"
+            return "INTERNAL"
         else:
             return "PORTAL"
+
+    @staticmethod
+    def _get_employee_by_id_internal(cursor, emp_id: int) -> Optional[EmployeeResponse]:
+        """Helper to fetch employee within existing cursor"""
+        sql = """
+        SELECT 
+            e.Id, e.FirstName, e.LastName, e.Email, e.PhoneNumber,
+            e.DateOfBirth, e.GenderId, e.MaritalStatusId, e.BloodGroupId,
+            e.DateOfJoining, e.DesignationId, e.DepartmentId, e.EmploymentType,
+            e.EmploymentStatus, e.AddressLine1, e.AddressLine2, e.City, e.State,
+            e.PostalCode, e.CountryId, e.AdditionalNotes, e.RoleId, e.IsActive,
+            e.CreatedAt, e.UserId,
+            
+            g.Name as GenderName,
+            ms.Name as MaritalStatusName,
+            bg.Name as BloodGroupName,
+            dep.Name as DepartmentName,
+            des.Name as DesignationName,
+            et.Name as EmploymentTypeName,
+            es.Name as EmploymentStatusName,
+            c.Name as CountryName,
+            r.role_name as RoleName
+            
+        FROM Employees e
+        LEFT JOIN Genders g ON e.GenderId = g.Id
+        LEFT JOIN MaritalStatuses ms ON e.MaritalStatusId = ms.Id
+        LEFT JOIN BloodGroups bg ON e.BloodGroupId = bg.Id
+        LEFT JOIN Departments dep ON e.DepartmentId = dep.Id
+        LEFT JOIN Designations des ON e.DesignationId = des.Id
+        LEFT JOIN EmploymentTypes et ON e.EmploymentType = et.Id
+        LEFT JOIN EmploymentStatuses es ON e.EmploymentStatus = es.Id
+        LEFT JOIN Countries c ON e.CountryId = c.Id
+        LEFT JOIN Roles r ON e.RoleId = r.role_id
+        WHERE e.Id = ?
+        """
+        cursor.execute(sql, (emp_id,))
+        row = cursor.fetchone() # Use fetchone instead of peek for consistency
+        
+        if not row:
+            return None
+
+        return EmployeeResponse(
+            id=row[0], first_name=row[1], last_name=row[2], email=row[3], phone_number=row[4],
+            date_of_birth=row[5], gender_id=row[6], marital_status_id=row[7], blood_group_id=row[8],
+            date_of_joining=row[9], designation_id=row[10], department_id=row[11], employment_type=row[12],
+            employment_status=row[13], address_line1=row[14], address_line2=row[15], city=row[16], state=row[17],
+            postal_code=row[18], country_id=row[19], additional_notes=row[20], role_id=row[21], is_active=bool(row[22]),
+            created_at=row[23], user_id=str(row[24]) if row[24] else None,
+            
+            gender_name=row[25], marital_status_name=row[26], blood_group_name=row[27],
+            department_name=row[28], designation_name=row[29], employment_type_name=row[30],
+            employment_status_name=row[31], country_name=row[32], role_name=row[33]
+        )
 
     @staticmethod
     def create_employee(data: EmployeeCreate, created_by_id: Optional[int] = None) -> EmployeeResponse:
@@ -109,7 +162,7 @@ class EmployeeService:
                 
                 logger.info(f"✅ Created Employee {emp_id} linked to User {user_id}")
                 
-                return EmployeeService.get_employee_by_id(emp_id)
+                return EmployeeService._get_employee_by_id_internal(cursor, emp_id)
 
         except Exception as e:
             logger.error(f"❌ Error creating employee: {str(e)}")
@@ -120,55 +173,7 @@ class EmployeeService:
         """Fetch single employee with joined data"""
         try:
             with get_db_cursor() as cursor:
-                sql = """
-                SELECT 
-                    e.Id, e.FirstName, e.LastName, e.Email, e.PhoneNumber,
-                    e.DateOfBirth, e.GenderId, e.MaritalStatusId, e.BloodGroupId,
-                    e.DateOfJoining, e.DesignationId, e.DepartmentId, e.EmploymentType,
-                    e.EmploymentStatus, e.AddressLine1, e.AddressLine2, e.City, e.State,
-                    e.PostalCode, e.CountryId, e.AdditionalNotes, e.RoleId, e.IsActive,
-                    e.CreatedAt, e.UserId,
-                    
-                    g.Name as GenderName,
-                    ms.Name as MaritalStatusName,
-                    bg.Name as BloodGroupName,
-                    dep.Name as DepartmentName,
-                    des.Name as DesignationName,
-                    et.Name as EmploymentTypeName,
-                    es.Name as EmploymentStatusName,
-                    c.Name as CountryName,
-                    r.role_name as RoleName
-                    
-                FROM Employees e
-                LEFT JOIN Genders g ON e.GenderId = g.Id
-                LEFT JOIN MaritalStatuses ms ON e.MaritalStatusId = ms.Id
-                LEFT JOIN BloodGroups bg ON e.BloodGroupId = bg.Id
-                LEFT JOIN Departments dep ON e.DepartmentId = dep.Id
-                LEFT JOIN Designations des ON e.DesignationId = des.Id
-                LEFT JOIN EmploymentTypes et ON e.EmploymentType = et.Id
-                LEFT JOIN EmploymentStatuses es ON e.EmploymentStatus = es.Id
-                LEFT JOIN Countries c ON e.CountryId = c.Id
-                LEFT JOIN Roles r ON e.RoleId = r.role_id
-                WHERE e.Id = ?
-                """
-                cursor.execute(sql, (emp_id,))
-                row = cursor.peek()
-                
-                if not row:
-                    return None
-
-                return EmployeeResponse(
-                    id=row[0], first_name=row[1], last_name=row[2], email=row[3], phone_number=row[4],
-                    date_of_birth=row[5], gender_id=row[6], marital_status_id=row[7], blood_group_id=row[8],
-                    date_of_joining=row[9], designation_id=row[10], department_id=row[11], employment_type=row[12],
-                    employment_status=row[13], address_line1=row[14], address_line2=row[15], city=row[16], state=row[17],
-                    postal_code=row[18], country_id=row[19], additional_notes=row[20], role_id=row[21], is_active=bool(row[22]),
-                    created_at=row[23], user_id=str(row[24]) if row[24] else None,
-                    
-                    gender_name=row[25], marital_status_name=row[26], blood_group_name=row[27],
-                    department_name=row[28], designation_name=row[29], employment_type_name=row[30],
-                    employment_status_name=row[31], country_name=row[32], role_name=row[33]
-                )
+                return EmployeeService._get_employee_by_id_internal(cursor, emp_id)
         except Exception as e:
             logger.error(f"❌ Error getting employee {emp_id}: {str(e)}")
             return None
@@ -205,7 +210,7 @@ class EmployeeService:
                             new_role_id = val
                 
                 if not fields:
-                    return EmployeeService.get_employee_by_id(emp_id)
+                    return EmployeeService._get_employee_by_id_internal(cursor, emp_id)
 
                 fields.append("ModifiedAt = SYSDATETIME()")
                 fields.append("ModifiedById = ?")
@@ -225,7 +230,7 @@ class EmployeeService:
                         cursor.execute("UPDATE Users SET role_id = ?, role = ? WHERE user_id = ?", 
                                      (new_role_id, role_str, user_id))
 
-                return EmployeeService.get_employee_by_id(emp_id)
+                return EmployeeService._get_employee_by_id_internal(cursor, emp_id)
         except Exception as e:
             logger.error(f"❌ Error updating employee {emp_id}: {str(e)}")
             raise e
@@ -310,10 +315,22 @@ class EmployeeService:
 
     @staticmethod
     def delete_employee(emp_id: int) -> bool:
-        """Soft delete an employee (set IsActive = 0)"""
+        """Soft delete an employee AND deactivate their User account"""
         try:
             with get_db_cursor() as cursor:
+                # 1. Get UserId linked to this Employee
+                cursor.execute("SELECT UserId FROM Employees WHERE Id = ?", (emp_id,))
+                row = cursor.fetchone()
+                
+                # 2. Soft delete Employee
                 cursor.execute("UPDATE Employees SET IsActive = 0 WHERE Id = ?", (emp_id,))
+                
+                # 3. Deactivate User if linked
+                if row and row[0]:
+                    user_id = row[0]
+                    cursor.execute("UPDATE Users SET is_active = 0 WHERE user_id = ?", (user_id,))
+                    logger.info(f"✅ Soft deleted User {user_id} linked to Employee {emp_id}")
+
                 logger.info(f"✅ Soft deleted Employee {emp_id}")
                 return True
         except Exception as e:

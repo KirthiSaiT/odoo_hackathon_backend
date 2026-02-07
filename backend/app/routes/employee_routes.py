@@ -1,6 +1,6 @@
 """
 Employee Routes
-API endpoints for employee/HR management
+API endpoints for employee management
 """
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from typing import Annotated
