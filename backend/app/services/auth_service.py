@@ -312,7 +312,9 @@ class AuthService:
     def get_password_reset_token(token: str) -> Optional[Dict[str, Any]]:
         """Get password reset token details"""
         try:
+            logger.info(f"🔍 Looking up reset token (first 50 chars): {token[:50]}...")
             with get_db_cursor() as cursor:
+                # First check if token exists at all
                 cursor.execute(
                     """
                     SELECT 
@@ -323,12 +325,26 @@ class AuthService:
                         expires_at,
                         is_used
                     FROM PasswordResetTokens
-                    WHERE token = ? AND is_used = 0 AND expires_at > SYSDATETIME()
+                    WHERE token = ?
                     """,
                     (token,)
                 )
                 row = cursor.fetchone()
                 if not row:
+                    logger.warning(f"⚠️ Token not found in database at all")
+                    return None
+                
+                logger.info(f"📦 Token found - is_used: {row[5]}, expires_at: {row[4]}")
+                
+                # Check if already used
+                if bool(row[5]):
+                    logger.warning(f"⚠️ Token already used")
+                    return None
+                
+                # Check if expired (compare with current time)
+                from datetime import datetime
+                if row[4] < datetime.utcnow():
+                    logger.warning(f"⚠️ Token expired at {row[4]}")
                     return None
                 
                 return {
