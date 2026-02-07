@@ -10,6 +10,7 @@ import logging
 import os
 
 from app.routes.auth_routes import router as auth_router
+from app.routes.admin_routes import router as admin_router
 from app.core.config import get_settings
 
 # Configure logging
@@ -116,6 +117,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 # Routes
 # =====================
 app.include_router(auth_router)
+app.include_router(admin_router)
 
 
 # =====================
