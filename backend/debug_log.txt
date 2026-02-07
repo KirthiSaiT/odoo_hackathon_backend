@@ -16,3 +16,14 @@ Fetching all products: page=1, size=50
 Fetching all products: page=1, size=50
 Fetching all products: page=1, size=50
 Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=10
+Fetching all products: page=1, size=10
+Fetching all products: page=1, size=10
+Fetching all products: page=1, size=10
+Fetching all products: page=1, size=50
