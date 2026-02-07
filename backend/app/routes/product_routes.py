@@ -1,11 +1,21 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from typing import Optional
+from typing import Optional, List
 
 from app.core.dependencies import get_current_user_token as get_current_user
 from app.models.product_models import ProductCreate, ProductResponse, ProductListResponse
 from app.services.product_service import ProductService
 
 router = APIRouter()
+
+@router.get("/categories", response_model=List[str])
+async def get_categories():
+    """
+    Get all product categories
+    """
+    try:
+        return ProductService.get_categories()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/", response_model=ProductResponse)
 async def create_product(

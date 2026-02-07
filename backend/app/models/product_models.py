@@ -13,6 +13,7 @@ class ProductBase(BaseModel):
     sales_price: Optional[float] = 0.00
     cost_price: Optional[float] = 0.00
     tax: Optional[str] = None
+    category: Optional[str] = None
     is_active: bool = True
 
 class RecurringPlanBase(BaseModel):
