@@ -18,6 +18,7 @@ ENV/
 *.swo
 
 # Environment variables
+.env
 .env.local
 
 # Logs
