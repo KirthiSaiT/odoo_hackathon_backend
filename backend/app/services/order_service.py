@@ -137,3 +137,68 @@ class OrderService:
         except Exception as e:
             logger.error(f"❌ Error fetching user orders: {str(e)}")
             raise e
+    @staticmethod
+    def get_order_details(order_id: str) -> Optional[dict]:
+        """Fetch full order details using multiple safe queries"""
+        try:
+            # 1. Ensure order_id is an integer
+            try:
+                numeric_id = int(order_id)
+            except (ValueError, TypeError):
+                return None
+
+            with get_db_cursor() as cursor:
+                # 2. Fetch Order basic info
+                cursor.execute("SELECT Id, UserId, TotalAmount, Status, CreatedAt FROM Orders WHERE Id = ?", (numeric_id,))
+                order_row = cursor.fetchone()
+                
+                if not order_row:
+                    return None
+                
+                order_id_val = order_row[0]
+                user_id_val = order_row[1]
+                total_amount = float(order_row[2])
+                status = order_row[3]
+                created_at = order_row[4].strftime("%d/%m/%Y %H:%M") if order_row[4] else "N/A"
+
+                # 3. Fetch User info (Optional)
+                user_info = {"email": "N/A", "name": "Valued Customer", "phone": "N/A"}
+                if user_id_val:
+                    cursor.execute("SELECT email, full_names FROM Users WHERE user_id = ?", (user_id_val,))
+                    u_row = cursor.fetchone()
+                    if u_row:
+                        user_info["email"] = u_row[0]
+                        user_info["name"] = u_row[1]
+
+                # 4. Fetch Order Items
+                items = []
+                # Joining OrderItems with Products for names
+                cursor.execute("""
+                    SELECT oi.ProductId, p.Name, oi.Quantity, oi.Price, oi.VariantId, oi.PlanName 
+                    FROM OrderItems oi 
+                    LEFT JOIN Products p ON oi.ProductId = p.Id 
+                    WHERE oi.OrderId = ?
+                """, (numeric_id,))
+
+                for item in cursor.fetchall():
+                    items.append({
+                        "product_id": str(item[0]),
+                        "product_name": item[1] or "Unknown Product",
+                        "quantity": float(item[2]),
+                        "price": float(item[3]),
+                        "variant_id": str(item[4]) if item[4] else None,
+                        "plan_name": item[5]
+                    })
+
+                return {
+                    "id": str(order_id_val),
+                    "amount": total_amount,
+                    "status": status,
+                    "created_at": created_at,
+                    "user": user_info,
+                    "items": items
+                }
+
+        except Exception as e:
+            logger.error(f"❌ Error fetching order details: {str(e)}")
+            raise e

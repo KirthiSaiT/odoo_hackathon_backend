@@ -38,3 +38,15 @@ async def get_orders(current_user: dict = Depends(get_current_user_token)):
         return {"orders": orders}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+@router.get("/{id}")
+async def get_order_details(id: str, current_user: dict = Depends(get_current_user_token)):
+    """Get single order details by ID"""
+    try:
+        order = OrderService.get_order_details(id)
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+        return order
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
