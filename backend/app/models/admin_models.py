@@ -173,3 +173,36 @@ class UserRightsResponse(BaseModel):
     """List of rights for a user"""
     user_id: str # user_id is string in other responses but int in DB? keeping int here to match table
     rights: List[UserRight]
+
+# =====================
+# ROLE MODELS
+# =====================
+
+class RoleBase(BaseModel):
+    """Base role fields"""
+    role_name: str = Field(..., min_length=2, max_length=50)
+    description: Optional[str] = None
+    is_active: bool = True
+
+class RoleCreate(RoleBase):
+    """Schema for creating a role"""
+    pass
+
+class RoleUpdate(BaseModel):
+    """Schema for updating a role"""
+    role_name: Optional[str] = Field(None, min_length=2, max_length=50)
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class RoleResponse(RoleBase):
+    """Schema for role response"""
+    role_id: int
+    created_at: Optional[datetime] = None
+
+class RoleListResponse(BaseModel):
+    """List response for roles"""
+    items: List[RoleResponse]
+    total: int
+    page: int
+    size: int
+

@@ -10,11 +10,13 @@ import string
 
 from app.core.database import get_db_cursor
 from app.core.security import Security
+from app.core.tenant import get_tenant_id
 from app.models.admin_models import (
     EmployeeCreate, EmployeeUpdate, EmployeeResponse, 
     LookupResponse, LookupItem, EmployeeListResponse,
     UserCreate, UserUpdate, UserResponse, UserListResponse, StatsResponse,
-    UserRight, UserRightsResponse
+    UserRight, UserRightsResponse,
+    RoleCreate, RoleUpdate, RoleResponse, RoleListResponse
 )
 
 logger = logging.getLogger(__name__)
@@ -84,13 +86,15 @@ class AdminService:
                     raise ValueError(f"Email {data.email} is already registered as a User")
 
                 # Insert User
+                tenant_id = get_tenant_id()
                 user_sql = """
-                INSERT INTO Users (name, email, password_hash, role, role_id, is_active, is_email_verified, created_by)
+                INSERT INTO Users (tenant_id, name, email, password_hash, role, role_id, is_active, is_email_verified, created_by)
                 OUTPUT INSERTED.user_id
-                VALUES (?, ?, ?, ?, ?, 1, 1, 'ADMIN')
+                VALUES (?, ?, ?, ?, ?, ?, 1, 1, 'ADMIN')
                 """
                 password_hash = Security.hash_password(password)
                 cursor.execute(user_sql, (
+                    tenant_id,
                     f"{data.first_name} {data.last_name or ''}".strip(),
                     data.email,
                     password_hash,
@@ -417,13 +421,15 @@ class AdminService:
                     raise ValueError(f"Email {data.email} is already registered")
 
                 password_hash = Security.hash_password(password)
+                tenant_id = get_tenant_id()
                 
                 sql = """
-                INSERT INTO Users (name, email, password_hash, role, role_id, is_active, is_email_verified, created_by, created_at)
+                INSERT INTO Users (tenant_id, name, email, password_hash, role, role_id, is_active, is_email_verified, created_by, created_at)
                 OUTPUT INSERTED.user_id, INSERTED.created_at
-                VALUES (?, ?, ?, ?, ?, ?, 1, ?, SYSDATETIME())
+                VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, SYSDATETIME())
                 """
                 cursor.execute(sql, (
+                    tenant_id,
                     data.name,
                     data.email,
                     password_hash,
@@ -629,3 +635,178 @@ class AdminService:
         except Exception as e:
             logger.error(f"❌ Error saving rights for user {user_id}: {str(e)}")
             raise e
+
+    # =====================
+    # ROLE CRUD OPERATIONS
+    # =====================
+
+    @staticmethod
+    def get_all_roles(page: int = 1, size: int = 10, search: str = None) -> RoleListResponse:
+        """Fetch paginated list of roles"""
+        offset = (page - 1) * size
+        try:
+            with get_db_cursor() as cursor:
+                # Count total
+                count_sql = "SELECT COUNT(*) FROM Roles WHERE 1=1"
+                params = []
+                if search:
+                    count_sql += " AND (role_name LIKE ? OR description LIKE ?)"
+                    search_pattern = f"%{search}%"
+                    params.extend([search_pattern, search_pattern])
+                
+                cursor.execute(count_sql, tuple(params))
+                total = cursor.fetchone()[0]
+
+                # Fetch items
+                sql = """
+                SELECT role_id, role_name, description, is_active, created_at
+                FROM Roles
+                WHERE 1=1
+                """
+                
+                if search:
+                    sql += " AND (role_name LIKE ? OR description LIKE ?)"
+                
+                sql += " ORDER BY role_id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY"
+                params.extend([offset, size])
+                
+                cursor.execute(sql, tuple(params))
+                rows = cursor.fetchall()
+                
+                items = []
+                for row in rows:
+                    items.append(RoleResponse(
+                        role_id=row[0],
+                        role_name=row[1],
+                        description=row[2],
+                        is_active=bool(row[3]),
+                        created_at=row[4]
+                    ))
+                    
+                return RoleListResponse(items=items, total=total, page=page, size=size)
+        except Exception as e:
+            logger.error(f"❌ Error getting roles: {str(e)}")
+            raise e
+
+    @staticmethod
+    def create_role(data: RoleCreate) -> RoleResponse:
+        """Create a new role"""
+        try:
+            with get_db_cursor() as cursor:
+                # Check if role name already exists
+                cursor.execute("SELECT 1 FROM Roles WHERE role_name = ?", (data.role_name,))
+                if cursor.fetchone():
+                    raise ValueError(f"Role '{data.role_name}' already exists")
+
+                sql = """
+                INSERT INTO Roles (role_name, description, is_active, created_at)
+                OUTPUT INSERTED.role_id, INSERTED.created_at
+                VALUES (?, ?, ?, SYSDATETIME())
+                """
+                cursor.execute(sql, (data.role_name, data.description, data.is_active))
+                row = cursor.fetchone()
+                if not row:
+                    raise Exception("Failed to create Role")
+                
+                return RoleResponse(
+                    role_id=row[0],
+                    role_name=data.role_name,
+                    description=data.description,
+                    is_active=data.is_active,
+                    created_at=row[1]
+                )
+        except Exception as e:
+            logger.error(f"❌ Error creating role: {str(e)}")
+            raise e
+
+    @staticmethod
+    def update_role(role_id: int, data: RoleUpdate) -> Optional[RoleResponse]:
+        """Update role details"""
+        try:
+            with get_db_cursor() as cursor:
+                fields = []
+                values = []
+                
+                if data.role_name is not None:
+                    fields.append("role_name = ?")
+                    values.append(data.role_name)
+                
+                if data.description is not None:
+                    fields.append("description = ?")
+                    values.append(data.description)
+                    
+                if data.is_active is not None:
+                    fields.append("is_active = ?")
+                    values.append(data.is_active)
+
+                if not fields:
+                    # No changes, fetch and return existing
+                    return AdminService._get_role_by_id(cursor, role_id)
+
+                values.append(role_id)
+                sql = f"UPDATE Roles SET {', '.join(fields)} WHERE role_id = ?"
+                cursor.execute(sql, tuple(values))
+                
+                return AdminService._get_role_by_id(cursor, role_id)
+        except Exception as e:
+            logger.error(f"❌ Error updating role {role_id}: {str(e)}")
+            raise e
+
+    @staticmethod
+    def _get_role_by_id(cursor, role_id: int) -> Optional[RoleResponse]:
+        """Helper to fetch role within existing cursor"""
+        cursor.execute("SELECT role_id, role_name, description, is_active, created_at FROM Roles WHERE role_id = ?", (role_id,))
+        row = cursor.fetchone()
+        if not row:
+            return None
+        return RoleResponse(
+            role_id=row[0],
+            role_name=row[1],
+            description=row[2],
+            is_active=bool(row[3]),
+            created_at=row[4]
+        )
+
+    @staticmethod
+    def delete_role(role_id: int) -> bool:
+        """Soft delete a role (set is_active = 0)"""
+        try:
+            # Prevent deleting system roles (Admin=1, Employee=2, User=3)
+            if role_id <= 3:
+                raise ValueError("Cannot delete system roles (Admin, Employee, User)")
+            
+            with get_db_cursor() as cursor:
+                cursor.execute("UPDATE Roles SET is_active = 0 WHERE role_id = ?", (role_id,))
+                return True
+        except Exception as e:
+            logger.error(f"❌ Error deleting role {role_id}: {str(e)}")
+            raise e
+
+    # =====================
+    # DELETE OPERATIONS
+    # =====================
+
+    @staticmethod
+    def delete_user(user_id: str) -> bool:
+        """Soft delete a user (set is_active = 0)"""
+        try:
+            with get_db_cursor() as cursor:
+                cursor.execute("UPDATE Users SET is_active = 0 WHERE user_id = ?", (user_id,))
+                logger.info(f"✅ Soft deleted User {user_id}")
+                return True
+        except Exception as e:
+            logger.error(f"❌ Error deleting user {user_id}: {str(e)}")
+            raise e
+
+    @staticmethod
+    def delete_employee(emp_id: int) -> bool:
+        """Soft delete an employee (set IsActive = 0)"""
+        try:
+            with get_db_cursor() as cursor:
+                cursor.execute("UPDATE Employees SET IsActive = 0 WHERE Id = ?", (emp_id,))
+                logger.info(f"✅ Soft deleted Employee {emp_id}")
+                return True
+        except Exception as e:
+            logger.error(f"❌ Error deleting employee {emp_id}: {str(e)}")
+            raise e
+

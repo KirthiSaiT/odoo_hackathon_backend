@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     # Frontend
     FRONTEND_URL: str = "http://localhost:5173"
     
+    # Tenant
+    DEFAULT_TENANT_ID: str = "1F1CA876-2C19-41C3-87AA-00890071A591"
+    
     # Environment
     ENVIRONMENT: str = "development"
     
