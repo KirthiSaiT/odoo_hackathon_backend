@@ -1,0 +1,8 @@
+Attempting to create client: client_name='Test Client Debug' email='debug_test_client_45c9ad93@example.com' contact_person='Debug Person' subscription_status='Pending' is_active=True password='password123' subscription_plan_id=None product_id=1 amount=100.0 payment_frequency='Monthly' subscription_start_date=datetime.datetime(2026, 2, 8, 5, 2, 0, 752646)
+Created By (UUID): b67114f7-bfc2-4e21-a888-37627e10a8c4
+Fetched valid Tenant ID: 1F1CA876-2C19-41C3-87AA-00890071A591
+DB Connection successful.
+Verified: Tenant 1F1CA876-2C19-41C3-87AA-00890071A591 exists in DB.
+Calling ClientService.create_client...
+Client created successfully!
+client_name='Test Client Debug' email='debug_test_client_45c9ad93@example.com' contact_person='Debug Person' subscription_status='Pending' is_active=True id=2 user_id='f7d43e50-5904-4315-94af-feaea5363357' created_at=datetime.datetime(2026, 2, 8, 5, 2, 1, 317000) created_by='b67114f7-bfc2-4e21-a888-37627e10a8c4'

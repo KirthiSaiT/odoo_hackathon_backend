@@ -22,9 +22,6 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS: int = 24
     PASSWORD_RESET_TOKEN_EXPIRE_HOURS: int = 1
-
-    # Stripe
-    STRIPE_SECRET_KEY: str
     
     # SMTP
     SMTP_HOST: str = "smtp.gmail.com"
@@ -51,8 +48,4 @@ class Settings(BaseSettings):
 @lru_cache()
 def get_settings() -> Settings:
     """Get cached settings instance"""
-    settings = Settings()
-    print(f"DEBUG: Loaded STRIPE_SECRET_KEY: {'Found' if settings.STRIPE_SECRET_KEY else 'Missing'}")
-    if settings.STRIPE_SECRET_KEY:
-        print(f"DEBUG: Key starts with: {settings.STRIPE_SECRET_KEY[:4]}")
-    return settings
+    return Settings()

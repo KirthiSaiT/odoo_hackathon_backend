@@ -6,7 +6,6 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from contextlib import asynccontextmanager
 import logging
 import os
 
@@ -18,7 +17,6 @@ from app.routes.profile_routes import router as profile_router
 from app.routes.product_routes import router as product_router
 from app.routes.cart_routes import router as cart_router
 from app.routes.subscription_routes import router as subscription_router
-from app.routes.payment_routes import router as payment_router
 from app.core.config import get_settings
 
 # Configure logging
@@ -28,33 +26,21 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
-    logger.info("Application starting up...")
-    
-    # Debug Stripe Key
-    try:
-        settings = get_settings()
-        logger.info(f"STARTUP DEBUG: Stripe Key Status: {'Present' if settings.STRIPE_SECRET_KEY else 'Missing'}")
-        if settings.STRIPE_SECRET_KEY:
-            logger.info(f"STARTUP DEBUG: Key starts with: {settings.STRIPE_SECRET_KEY[:4]}...")
-    except Exception as e:
-        logger.error(f"STARTUP DEBUG: Error checking Stripe key: {e}")
-        
-    yield
-    # Shutdown
-    logger.info("Application shutting down...")
-
 # Initialize FastAPI app
 app = FastAPI(
     title="SaaS Authentication API",
     description="Multi-tenant authentication module with JWT",
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc",
-    lifespan=lifespan
+    redoc_url="/redoc"
 )
+
+from app.services.scheduler_service import SchedulerService
+
+@app.on_event("startup")
+async def startup_event():
+    """Start background services"""
+    await SchedulerService.start_scheduler()
 
 
 # =====================
@@ -144,6 +130,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 # Routes
 # =====================
 from app.routes.order_routes import router as order_router
+from app.routes.client_routes import router as client_router
 
 # ... inside routes section ...
 app.include_router(auth_router)
@@ -154,8 +141,8 @@ app.include_router(profile_router)
 app.include_router(product_router, prefix="/api/products", tags=["Products"])
 app.include_router(cart_router, prefix="/api/cart", tags=["Cart"])
 app.include_router(subscription_router, prefix="/api/subscriptions", tags=["Subscriptions"])
-app.include_router(payment_router, prefix="/api", tags=["Payments"])
 app.include_router(order_router, prefix="/api", tags=["Orders"])
+app.include_router(client_router, prefix="/api/clients", tags=["Clients"])
 
 
 
