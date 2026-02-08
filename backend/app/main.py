@@ -35,6 +35,13 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+from app.services.scheduler_service import SchedulerService
+
+@app.on_event("startup")
+async def startup_event():
+    """Start background services"""
+    await SchedulerService.start_scheduler()
+
 
 # =====================
 # CORS Configuration
@@ -123,6 +130,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 # Routes
 # =====================
 from app.routes.order_routes import router as order_router
+from app.routes.client_routes import router as client_router
 
 # ... inside routes section ...
 app.include_router(auth_router)
@@ -134,6 +142,7 @@ app.include_router(product_router, prefix="/api/products", tags=["Products"])
 app.include_router(cart_router, prefix="/api/cart", tags=["Cart"])
 app.include_router(subscription_router, prefix="/api/subscriptions", tags=["Subscriptions"])
 app.include_router(order_router, prefix="/api", tags=["Orders"])
+app.include_router(client_router, prefix="/api/clients", tags=["Clients"])
 
 
 

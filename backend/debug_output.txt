@@ -1,0 +1,8 @@
+FAILED TO CREATE CLIENT
+Error Type: ProgrammingError
+Error Message: ('42S22', "[42S22] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Invalid column name 'ModuleName'. (207) (SQLExecDirectW); [42S22] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Invalid column name 'Id'. (207)")
+Traceback (most recent call last):
+  File "C:\projects\odoo_hackathon_finals\odoo_hackathon_backend\backend\debug_client_creation.py", line 37, in test_create_client
+    cursor.execute("SELECT TOP 1 Id FROM Modules WHERE ModuleName='Products'") # Just checking DB access
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pyodbc.ProgrammingError: ('42S22', "[42S22] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Invalid column name 'ModuleName'. (207) (SQLExecDirectW); [42S22] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Invalid column name 'Id'. (207)")

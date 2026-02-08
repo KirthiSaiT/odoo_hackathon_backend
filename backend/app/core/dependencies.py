@@ -49,3 +49,15 @@ def require_role(*allowed_roles: str):
             )
         return current_user
     return role_checker
+
+def get_current_active_user(
+    current_user: dict = Depends(get_current_user_token)
+) -> dict:
+    """
+    Dependency to get current active user.
+    For now, it just returns the user from token.
+    In future, we can add DB check here.
+    """
+    # We could check DB here to ensure user is still active
+    # For performance, we rely on token validity for now
+    return current_user
