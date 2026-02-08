@@ -3,3 +3,6 @@ Calling ClientService.create_client...
 Client created successfully!
 client_name='Test Client Debug' email='debug_test_client_45c9ad93@example.com' contact_person='Debug Person' subscription_status='Pending' is_active=True id=2 user_id='f7d43e50-5904-4315-94af-feaea5363357' created_at=datetime.datetime(2026, 2, 8, 5, 2, 1, 317000) created_by='b67114f7-bfc2-4e21-a888-37627e10a8c4'
 Fetching all products: page=1, size=100
+Fetching all products: page=1, size=50
+Fetching all products: page=1, size=100
+Fetching all products: page=1, size=100
